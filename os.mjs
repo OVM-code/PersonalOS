@@ -5,11 +5,16 @@
  *
  * Commands:
  *   node os.mjs ingest [file...]     merge export(s) from inbox/ (or given paths) into data/store.json
+ *   node os.mjs sync                 ingest + build + git commit + push in one go
  *   node os.mjs build                regenerate views/, graph/graph.json and dashboard.html from the store
  *   node os.mjs writeback [out]      produce an import-ready JSON for the capture tool (round-trip)
  *   node os.mjs status               one-screen summary of the store
  *   node os.mjs search <query>       quick full-text search across everything (live + archived)
+ *   node os.mjs doctor               store integrity check (duplicate ids, broken links, bad dates)
  *   node os.mjs selftest             run the built-in contract tests (ids stable, version guard, merge)
+ *
+ * Builds are deterministic for a given store: generated files carry no volatile
+ * timestamps, so rebuilding without new data produces zero git diff.
  *
  * ═══════════════════════════ THE CONTRACT ═══════════════════════════
  * 1. IDS ARE SACRED. Every record's `id` is an opaque stable string minted
@@ -25,7 +30,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import os from 'node:os';
+import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
@@ -357,7 +362,9 @@ function buildGraph(store) {
   for (const n of [...nodes.values()]) {
     if (n.type === 'domain' && !used.has(n.id)) nodes.delete(n.id);
   }
-  return { generated: now(), nodes: [...nodes.values()], edges };
+  // no volatile timestamp here: builds must be deterministic for a given store,
+  // so rebuilds without data changes produce zero git diff
+  return { asOf: store._meta.lastIngest?.exported ?? null, nodes: [...nodes.values()], edges };
 }
 
 /* ───────────────────────── markdown views ───────────────────────── */
@@ -538,7 +545,7 @@ function mdOverview(store) {
   const stale = L.items.filter(isStale).length;
   const overdue = L.items.filter((i) => { const d = dueDays(i.due); return d !== null && d < 0; }).length;
   let md = GEN_HEADER('PersonalOS — overview');
-  md += `_Generated ${now().slice(0, 16).replace('T', ' ')} · last ingest: ${store._meta.lastIngest ? `${store._meta.lastIngest.file} (exported ${store._meta.lastIngest.exported})` : 'never'}_\n\n`;
+  md += `_Data as of: ${store._meta.lastIngest ? `${store._meta.lastIngest.file} (exported ${store._meta.lastIngest.exported})` : 'nothing ingested yet'}_\n\n`;
   md += `| Open loops | Stale | Overdue | Wins | Habits | Journal days | Closed/dropped (archive) |\n|---|---|---|---|---|---|---|\n`;
   md += `| ${open} | ${stale} | ${overdue} | ${L.wins.length} | ${L.habits.length} | ${Object.keys(L.journal).length} | ${store.archive.items.length} |\n\n`;
   md += '## Open loops by domain\n\n';
@@ -579,7 +586,7 @@ function cmdBuild() {
   writeJson(PATHS.graph, graph);
   // dashboard: inject data into the template
   if (fs.existsSync(PATHS.template)) {
-    const payload = { generated: now(), live: store.live, archive: store.archive, graph, lastIngest: store._meta.lastIngest };
+    const payload = { live: store.live, archive: store.archive, graph, lastIngest: store._meta.lastIngest };
     const html = fs.readFileSync(PATHS.template, 'utf8')
       .replace('/*__OS_DATA__*/null', () => JSON.stringify(payload).replace(/</g, '\\u003c'));
     fs.writeFileSync(PATHS.dashboard, html);
@@ -629,6 +636,71 @@ function cmdSearch(args) {
   if (hits.length > 30) console.log(`… and ${hits.length - 30} more. Open dashboard.html for full search.`);
 }
 
+/* ───────────────────────── doctor (store integrity) ───────────────────────── */
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+function analyzeStore(store) {
+  const errors = [], warnings = [];
+  const seen = new Map(); // id -> where first seen
+  for (const k of ID_COLLECTIONS) {
+    for (const scope of ['live', 'archive']) {
+      for (const r of store[scope][k] || []) {
+        if (!r.id || typeof r.id !== 'string') { errors.push(`${scope}.${k}: record without a string id (${JSON.stringify(r).slice(0, 60)}…)`); continue; }
+        const where = `${scope}.${k}`;
+        if (seen.has(r.id)) errors.push(`duplicate id "${r.id}" in ${where} and ${seen.get(r.id)} — a duplicated id corrupts every future merge`);
+        else seen.set(r.id, where);
+      }
+    }
+  }
+  const goalIds = new Set([...store.live.goals, ...store.archive.goals].map((g) => g.id));
+  for (const scope of ['live', 'archive']) {
+    for (const k of ['items', 'habits']) {
+      for (const r of store[scope][k]) {
+        if (r.goalId && !goalIds.has(r.goalId)) warnings.push(`${scope}.${k} "${(r.text || r.name || '').slice(0, 40)}" references missing goal ${r.goalId}`);
+      }
+    }
+  }
+  for (const it of store.live.items) {
+    if (!DOMAINS[it.domain]) warnings.push(`item ${it.id} has unknown domain "${it.domain}"`);
+    if (!TYPES[it.type]) warnings.push(`item ${it.id} has unknown type "${it.type}"`);
+    if (it.due && !DATE_RE.test(it.due)) errors.push(`item ${it.id} has malformed due date "${it.due}"`);
+  }
+  for (const day of Object.keys(store.live.journal)) if (!DATE_RE.test(day)) errors.push(`journal key "${day}" is not YYYY-MM-DD`);
+  for (const h of store.live.habits) for (const day of Object.keys(h.checks || {})) if (!DATE_RE.test(day)) errors.push(`habit ${h.id} check key "${day}" is not YYYY-MM-DD`);
+  return { errors, warnings };
+}
+function cmdDoctor() {
+  const store = loadStore();
+  const { errors, warnings } = analyzeStore(store);
+  const leftovers = fs.existsSync(PATHS.inbox) ? fs.readdirSync(PATHS.inbox).filter((f) => f.endsWith('.json')) : [];
+  if (leftovers.length) warnings.push(`inbox/ has ${leftovers.length} un-ingested export(s): ${leftovers.join(', ')} — run: node os.mjs ingest`);
+  for (const e of errors) console.log(`✗ ${e}`);
+  for (const w of warnings) console.log(`△ ${w}`);
+  if (!errors.length && !warnings.length) console.log(`✓ store is healthy — ${summaryLine(store)}`);
+  else console.log(`${errors.length} error(s), ${warnings.length} warning(s).`);
+  if (errors.length) process.exit(1);
+}
+
+/* ───────────────────────── sync (ingest + build + commit + push) ───────────────────────── */
+function cmdSync(args) {
+  const sh = (cmd) => execSync(cmd, { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] }).toString().trim();
+  const inboxFiles = fs.existsSync(PATHS.inbox) ? fs.readdirSync(PATHS.inbox).filter((f) => f.endsWith('.json')) : [];
+  if (inboxFiles.length) cmdIngest(args.filter((a) => a.startsWith('--')));
+  else cmdBuild();
+  if (!sh('git status --porcelain')) { console.log('✓ nothing to commit — already in sync'); return; }
+  sh('git add -A');
+  const store = loadStore();
+  execSync(`git commit -m ${JSON.stringify('sync: ' + summaryLine(store))}`, { cwd: ROOT, stdio: 'inherit' });
+  const branch = sh('git rev-parse --abbrev-ref HEAD');
+  for (let i = 0, wait = 2; ; i++, wait *= 2) {
+    try { execSync(`git push -u origin ${branch}`, { cwd: ROOT, stdio: 'inherit' }); break; }
+    catch (e) {
+      if (i >= 4) throw fail('git push failed after 5 attempts — check your connection and push manually.');
+      console.log(`push failed — retrying in ${wait}s…`);
+      execSync(`sleep ${wait}`);
+    }
+  }
+  console.log('✓ synced');
+}
 /* ───────────────────────── selftest ───────────────────────── */
 function cmdSelftest() {
   let n = 0;
@@ -686,6 +758,16 @@ function cmdSelftest() {
   ok(graph.nodes.some((nn) => nn.id === 'person:anna'), 'graph extracts people from who-fields');
   ok(graph.nodes.some((nn) => nn.id === 'topic:property'), 'graph extracts #tags as topics');
   ok(graph.nodes.some((nn) => nn.id === 'loop:bbb22' && nn.archived), 'archived records stay in the graph, flagged');
+  // 7. doctor catches corruption
+  ok(analyzeStore(store).errors.length === 0, 'doctor: healthy store has no errors');
+  const sick = JSON.parse(JSON.stringify(store));
+  sick.live.items.push({ ...sick.live.items[0] }); // duplicate id
+  sick.live.items[0].due = '07/10/2026'; // malformed date
+  sick.live.habits[0].goalId = 'g-gone'; // dangling goal link
+  const diag = analyzeStore(sick);
+  ok(diag.errors.some((e) => e.includes('duplicate id')), 'doctor: detects duplicate ids');
+  ok(diag.errors.some((e) => e.includes('malformed due date')), 'doctor: detects malformed dates');
+  ok(diag.warnings.some((w) => w.includes('missing goal')), 'doctor: flags dangling goal links');
   console.log(`All ${n} contract checks passed.`);
 }
 
@@ -698,9 +780,20 @@ try {
     case 'writeback': cmdWriteback(args); break;
     case 'status': cmdStatus(); break;
     case 'search': cmdSearch(args); break;
+    case 'doctor': cmdDoctor(); break;
+    case 'sync': cmdSync(args); break;
     case 'selftest': cmdSelftest(); break;
     default:
-      console.log('PersonalOS — usage: node os.mjs <ingest|build|writeback|status|search|selftest>');
+      console.log(`PersonalOS — usage: node os.mjs <command>
+
+  ingest [file...]   merge export(s) from inbox/ (or given paths), archive raws, rebuild everything
+  sync               ingest (if inbox has files) + build + git commit + push, in one go
+  build              regenerate views/, graph/graph.json and dashboard.html from the store
+  writeback [out]    produce import-ready JSON for the capture tool (choose MERGE when importing)
+  status             one-line store summary
+  search <query>     full-text search from the terminal, live + archived
+  doctor             check store integrity (duplicate ids, broken goal links, malformed dates)
+  selftest           run the data-contract tests (run after any change to os.mjs)`);
       process.exit(cmd ? 1 : 0);
   }
 } catch (e) {

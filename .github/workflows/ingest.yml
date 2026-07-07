@@ -1,0 +1,49 @@
+name: Ingest exports
+
+# Upload an Open Loops JSON export into inbox/ (GitHub app or website works fine
+# from a phone) and this workflow ingests it: merges into data/store.json, archives
+# the raw export, rebuilds views/ + graph/ + dashboard.html, and commits the result.
+#
+# If the run fails, the export stays in inbox/ untouched — open the run log; the
+# usual cause is an export older than the last ingested one (protection against
+# archiving newer records) or an unrecognized _meta.schemaVersion.
+
+on:
+  push:
+    paths:
+      - 'inbox/*.json'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ingest-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Contract selftest
+        run: node os.mjs selftest
+
+      - name: Ingest inbox and rebuild
+        run: node os.mjs ingest
+
+      - name: Store integrity check
+        run: node os.mjs doctor
+
+      - name: Commit results
+        run: |
+          git config user.name "personalos-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "ingest: automated merge of inbox export(s)"
+          git push

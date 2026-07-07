@@ -2,7 +2,7 @@
 
 # PersonalOS — overview
 
-_Generated 2026-07-07 10:58 · last ingest: never_
+_Data as of: nothing ingested yet_
 
 | Open loops | Stale | Overdue | Wins | Habits | Journal days | Closed/dropped (archive) |
 |---|---|---|---|---|---|---|

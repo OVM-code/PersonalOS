@@ -22,12 +22,19 @@ merged into one record, connected into a searchable knowledge graph.
 
 1. **Capture** all week in `tools/openloops.html` (keep a copy on your phone/laptop —
    it's a single file, works offline, data lives in the browser).
-2. **Export JSON** from the tool's footer, drop the file into `inbox/`.
-3. **Ingest**: `node os.mjs ingest` — merges into the canonical store, archives the raw
-   export, and rebuilds all views, the graph, and the dashboard. Commit and push.
+2. **Export JSON** from the tool's footer.
+3. **Get it in** — either way works:
+   - **From a phone (no terminal needed):** upload the export into `inbox/` via the
+     GitHub app or github.com ("Add file → Upload files"). A GitHub Action ingests it,
+     rebuilds everything, and commits the result within a minute or two. If the Action
+     shows a red ✗, the export was refused (usually: older than the last ingested one,
+     or an unknown schema version) and stays in `inbox/` untouched — nothing is corrupted.
+   - **From a laptop:** drop the file in `inbox/` and run `node os.mjs sync` — one
+     command for ingest + rebuild + commit + push.
 4. **Find things**: open `dashboard.html` for full-text search and the interactive
    knowledge graph, browse `views/` right on GitHub, or ask Claude Code — `CLAUDE.md`
-   teaches it the data contract.
+   teaches it the data contract. (The dashboard is deliberately **not** published
+   anywhere — it contains your journal. It's a local file; keep it that way.)
 5. **Write back** (optional): `node os.mjs writeback` produces an import-ready file;
    import it in the tool and choose **MERGE**. Ids are stable, so edits made on the OS
    side update the matching records on the device instead of duplicating them.
@@ -47,10 +54,12 @@ merged into one record, connected into a searchable knowledge graph.
 
 ```
 node os.mjs ingest        # merge everything in inbox/, rebuild all outputs
+node os.mjs sync          # ingest + rebuild + commit + push, one command
 node os.mjs build         # rebuild views/graph/dashboard from the store
 node os.mjs writeback     # produce a merge-ready import file for the tool
 node os.mjs status        # quick summary
 node os.mjs search <q>    # search from the terminal
+node os.mjs doctor        # integrity check: duplicate ids, dangling links, bad dates
 node os.mjs selftest      # verify the data contract (ids stable, version guard, merge)
 ```
 

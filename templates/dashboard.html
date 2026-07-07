@@ -160,8 +160,7 @@ $('#themeBtn').addEventListener('click',()=>applyTheme(document.documentElement.
 
 /* header + stats */
 const L = OS.live, A = OS.archive;
-$('#gen').textContent = 'generated ' + OS.generated.slice(0,16).replace('T',' ') +
-  (OS.lastIngest ? ' · last ingest ' + (OS.lastIngest.exported||'').slice(0,10) : ' · nothing ingested yet');
+$('#gen').textContent = OS.lastIngest ? 'data as of ' + (OS.lastIngest.exported||'').slice(0,16).replace('T',' ') : 'nothing ingested yet';
 const dueDays = d => { if(!d) return null; const t=new Date(); t.setHours(0,0,0,0); return Math.round((new Date(d+'T00:00:00')-t)/DAY); };
 const ageDays = iso => Math.floor((Date.now()-new Date(iso).getTime())/DAY);
 const STALE = {followup:7,decision:14,idea:null,recurring:null};
@@ -274,7 +273,7 @@ renderResults();
 let G=null, sim=null, booted=false, selected=null;
 const hiddenTypes=new Set();
 function graphBoot(){
-  if(booted){ resize(); return; }
+  if(booted){ resize(); kick(); return; }
   booted=true;
   const nodes=OS.graph.nodes.map(n=>({...n}));
   const byId=new Map(nodes.map(n=>[n.id,n]));
@@ -291,35 +290,53 @@ function graphBoot(){
   const hit=(x,y)=>{ let best=null,bd=1e9; for(const n of visNodes()){ const d=(n.x-x)**2+(n.y-y)**2; const rr=(nodeR(n)+4)**2; if(d<rr&&d<bd){bd=d;best=n;} } return best; };
   const down=ev=>{ const [x,y]=pos(ev); const n=hit(x,y); moved=false;
     if(n){ dragging=n; n.fx=x; n.fy=y; } else { panning=true; const p=ev.touches?ev.touches[0]:ev; px=p.clientX; py=p.clientY; }
-    G.alpha=Math.max(G.alpha,.3); ev.preventDefault(); };
-  const move=ev=>{ if(dragging){ const [x,y]=pos(ev); dragging.x=x; dragging.y=y; dragging.vx=0; dragging.vy=0; moved=true; G.alpha=Math.max(G.alpha,.3); }
-    else if(panning){ const p=ev.touches?ev.touches[0]:ev; G.tx+=(p.clientX-px)/G.scale; G.ty+=(p.clientY-py)/G.scale; px=p.clientX; py=p.clientY; moved=true; } };
+    kick(.3); ev.preventDefault(); };
+  const move=ev=>{ if(dragging){ const [x,y]=pos(ev); dragging.x=x; dragging.y=y; dragging.vx=0; dragging.vy=0; moved=true; kick(.3); }
+    else if(panning){ const p=ev.touches?ev.touches[0]:ev; G.tx+=(p.clientX-px)/G.scale; G.ty+=(p.clientY-py)/G.scale; px=p.clientX; py=p.clientY; moved=true; kick(); } };
   const up=ev=>{ if(dragging&&!moved) selectNode(dragging.id);
     else if(panning&&!moved){ const [x,y]=pos(ev.changedTouches?ev.changedTouches[0]?{clientX:ev.changedTouches[0].clientX,clientY:ev.changedTouches[0].clientY}:ev:ev); const n=hit(x,y); selectNode(n?n.id:null); }
     dragging=null; panning=false; };
   cv.addEventListener('mousedown',down); cv.addEventListener('mousemove',move); window.addEventListener('mouseup',up);
   cv.addEventListener('touchstart',down,{passive:false}); cv.addEventListener('touchmove',move,{passive:false}); cv.addEventListener('touchend',up);
-  cv.addEventListener('wheel',ev=>{ ev.preventDefault(); G.scale=Math.min(4,Math.max(.25,G.scale*(ev.deltaY<0?1.12:0.89))); },{passive:false});
+  cv.addEventListener('wheel',ev=>{ ev.preventDefault(); G.scale=Math.min(4,Math.max(.25,G.scale*(ev.deltaY<0?1.12:0.89))); kick(); },{passive:false});
   // legend
   const types=[...new Set(nodes.map(n=>n.type))];
   $('#legend').innerHTML=types.map(t=>'<span data-t="'+t+'"><i style="background:'+(TYPE_COLORS[t]||'#888')+'"></i>'+t+'</span>').join('');
   $('#legend').addEventListener('click',e=>{ const s=e.target.closest('[data-t]'); if(!s)return;
-    const t=s.dataset.t; hiddenTypes.has(t)?hiddenTypes.delete(t):hiddenTypes.add(t); s.classList.toggle('off'); G.alpha=Math.max(G.alpha,.4); });
-  requestAnimationFrame(tick);
+    const t=s.dataset.t; hiddenTypes.has(t)?hiddenTypes.delete(t):hiddenTypes.add(t); s.classList.toggle('off'); kick(.4); });
+  kick(1);
 }
 function resize(){ const cv=$('#graphCanvas'); const dpr=window.devicePixelRatio||1;
   cv.width=cv.clientWidth*dpr; cv.height=cv.clientHeight*dpr; }
-window.addEventListener('resize',()=>{ if(booted) resize(); });
+window.addEventListener('resize',()=>{ if(booted){ resize(); kick(); } });
 const nodeR=n=>Math.min(16, 4+Math.sqrt(n.deg||0)*2.2 + (n.type==='domain'||n.type==='goal'?3:0));
 const visNodes=()=>G.nodes.filter(n=>!hiddenTypes.has(n.type));
+let running=false, coolFrames=0;
+function kick(a){
+  if(a) G.alpha=Math.max(G.alpha,a);
+  coolFrames=Math.max(coolFrames,2);
+  if(!running){ running=true; requestAnimationFrame(tick); }
+}
 function tick(){
   const vis=visNodes(), visSet=new Set(vis.map(n=>n.id));
   if(G.alpha>0.005){
-    // repulsion
-    for(let i=0;i<vis.length;i++) for(let j=i+1;j<vis.length;j++){
-      const a=vis[i],b=vis[j]; let dx=b.x-a.x, dy=b.y-a.y; let d2=dx*dx+dy*dy||1; if(d2>90000) continue;
-      const f=900/d2*G.alpha; const d=Math.sqrt(d2); dx/=d; dy/=d;
-      a.vx-=dx*f; a.vy-=dy*f; b.vx+=dx*f; b.vy+=dy*f;
+    // repulsion via spatial hash — O(n · local) instead of O(n²), scales to thousands of nodes
+    const CELL=150, grid=new Map();
+    for(const n of vis){
+      const k=Math.floor(n.x/CELL)+'|'+Math.floor(n.y/CELL);
+      let c=grid.get(k); if(!c){c=[];grid.set(k,c);} c.push(n);
+    }
+    for(const n of vis){
+      const cx=Math.floor(n.x/CELL), cy=Math.floor(n.y/CELL);
+      for(let gx=cx-2;gx<=cx+2;gx++) for(let gy=cy-2;gy<=cy+2;gy++){
+        const cell=grid.get(gx+'|'+gy); if(!cell) continue;
+        for(const b of cell){
+          if(b===n) continue;
+          const dx=b.x-n.x, dy=b.y-n.y; const d2=dx*dx+dy*dy||1; if(d2>90000) continue;
+          const f=900/d2*G.alpha, d=Math.sqrt(d2);
+          n.vx-=dx/d*f; n.vy-=dy/d*f;
+        }
+      }
     }
     // springs
     for(const e of G.edges){ if(!visSet.has(e.source)||!visSet.has(e.target)) continue;
@@ -334,7 +351,10 @@ function tick(){
     G.alpha*=0.985;
   }
   draw(vis,visSet);
-  requestAnimationFrame(tick);
+  // idle-stop: once the layout settles and pending redraws are done, halt the
+  // animation loop entirely (no background CPU/battery drain); any interaction kicks it awake
+  if(G.alpha>0.005 || coolFrames>0){ coolFrames=Math.max(0,coolFrames-1); requestAnimationFrame(tick); }
+  else running=false;
 }
 function draw(vis,visSet){
   const cv=$('#graphCanvas'), ctx=cv.getContext('2d'), dpr=window.devicePixelRatio||1;
@@ -384,7 +404,7 @@ function selectNode(id){
     '<div class="sel-meta">'+meta.map(esc).join(' · ')+'</div>'+
     '<h3>'+conns.length+' connection'+(conns.length===1?'':'s')+'</h3>'+
     conns.map(c=>'<div class="conn" data-go="'+esc(c.other.id)+'"><span class="rel">'+esc(c.rel)+' · '+esc(c.other.type)+'</span>'+esc(c.other.label)+'</div>').join('');
-  G.alpha=Math.max(G.alpha,.1);
+  kick(.05);
 }
 $('#gside').addEventListener('click',e=>{ const c=e.target.closest('[data-go]'); if(c) selectNode(c.dataset.go); });
 })();

@@ -1,0 +1,4 @@
+# writeback files are transient round-trip artifacts — regenerate with: node os.mjs writeback
+writeback-*.json
+node_modules/
+.DS_Store

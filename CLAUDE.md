@@ -49,14 +49,28 @@ checks are unioned; `log[]` is concatenated, deduped, and kept chronological.
 
 ```
 node os.mjs ingest [file...]   # merge exports from inbox/ (or given paths); auto-runs build
+node os.mjs sync               # ingest + build + git commit + push in one go
 node os.mjs build              # regenerate views/, graph/graph.json, dashboard.html
 node os.mjs writeback [out]    # produce import-ready JSON for the capture tool (choose MERGE there)
 node os.mjs status             # one-line store summary
 node os.mjs search <query>     # quick full-text search, live + archived
+node os.mjs doctor             # store integrity check (duplicate ids, dangling links, bad dates)
 node os.mjs selftest           # contract tests — run after ANY change to os.mjs
 ```
 
 Zero dependencies, Node 18+. After changing `os.mjs`, always run `node os.mjs selftest`.
+
+**Automation:** `.github/workflows/ingest.yml` auto-ingests any JSON pushed to `inbox/`
+(selftest → ingest → doctor → commit). Keep the selftest green — CI runs it before every
+automated ingest, so a broken contract blocks ingestion rather than corrupting the store.
+
+**Determinism:** builds carry no volatile timestamps — rebuilding an unchanged store
+produces zero git diff. Don't add `new Date()` / `now()` calls to anything that lands in
+generated files (relative ages like "3d open" are the only date-dependent content).
+
+**Privacy:** the dashboard contains journal entries. It stays a local file by explicit
+user choice — never publish it (GitHub Pages, artifacts to shared audiences, etc.)
+without asking first.
 
 ## Layout
 
