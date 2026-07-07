@@ -5,6 +5,11 @@ browser) is the **input layer**; this repo is the **system of record**. Exports 
 through `inbox/`, everything is merged into one canonical store, and searchable views plus a
 knowledge graph are generated from it.
 
+**Changing the system itself?** (os.mjs, templates/, merge logic, schema versions):
+read **`MAINTENANCE.md`** first — it has the invariants, per-change playbooks, the
+verification loop, and recovery procedures. The short version: run `node os.mjs
+selftest` before and after, never regenerate ids, never guess at schema versions.
+
 ## ⚠️ THE CONTRACT — read before touching any data
 
 **1. IDs are sacred. Never regenerate, rewrite, or reassign an `id`. Ever.**
