@@ -1,0 +1,76 @@
+# PersonalOS
+
+One system for everything circling in your head: open loops, goals, habits, journal, wins,
+manifestations, client pipeline, events, library, groceries — captured on any device,
+merged into one record, connected into a searchable knowledge graph.
+
+```
+ phone / laptop                      this repo (system of record)
+┌────────────────────┐   export    ┌──────────────────────────────────────┐
+│ tools/             │  ─────────▶ │ inbox/  →  node os.mjs ingest        │
+│  openloops.html    │             │              │                       │
+│ (capture, offline, │             │              ▼                       │
+│  localStorage)     │   import    │        data/store.json  (canonical)  │
+│                    │ ◀─────────  │              │                       │
+└────────────────────┘  writeback  │              ▼  node os.mjs build    │
+                                   │  views/*.md · graph/graph.json ·     │
+                                   │  dashboard.html (search + graph)     │
+                                   └──────────────────────────────────────┘
+```
+
+## The weekly loop
+
+1. **Capture** all week in `tools/openloops.html` (keep a copy on your phone/laptop —
+   it's a single file, works offline, data lives in the browser).
+2. **Export JSON** from the tool's footer, drop the file into `inbox/`.
+3. **Ingest**: `node os.mjs ingest` — merges into the canonical store, archives the raw
+   export, and rebuilds all views, the graph, and the dashboard. Commit and push.
+4. **Find things**: open `dashboard.html` for full-text search and the interactive
+   knowledge graph, browse `views/` right on GitHub, or ask Claude Code — `CLAUDE.md`
+   teaches it the data contract.
+5. **Write back** (optional): `node os.mjs writeback` produces an import-ready file;
+   import it in the tool and choose **MERGE**. Ids are stable, so edits made on the OS
+   side update the matching records on the device instead of duplicating them.
+
+## Connecting things (the graph)
+
+- Put **#hashtags** in any text — loop, note, habit name, event, library item, win —
+  and they become topic nodes linking everything that shares them.
+- The **"waiting on"** field on a loop creates a person node; every loop involving the
+  same person clusters around them.
+- Link loops and habits to **goals** in the tool; the graph shows what actually
+  supports what, and the stats show where cleared effort went.
+- Closed and dropped loops are **never lost**: the OS archives what the tool deletes,
+  flagged as archived, still searchable, still in the graph.
+
+## Commands
+
+```
+node os.mjs ingest        # merge everything in inbox/, rebuild all outputs
+node os.mjs build         # rebuild views/graph/dashboard from the store
+node os.mjs writeback     # produce a merge-ready import file for the tool
+node os.mjs status        # quick summary
+node os.mjs search <q>    # search from the terminal
+node os.mjs selftest      # verify the data contract (ids stable, version guard, merge)
+```
+
+Node 18+, zero dependencies, nothing to install.
+
+## Try it
+
+A realistic sample export lives in `examples/sample-export.json`:
+
+```
+node os.mjs ingest examples/sample-export.json
+open dashboard.html
+```
+
+To start fresh afterwards: `rm data/store.json data/exports/*.json && node os.mjs build`.
+
+## Data contract (the short version)
+
+- Record **ids are stable** and never regenerated — the merge in both directions matches
+  by id. See `CLAUDE.md` for the full contract.
+- Exports carry `_meta.schemaVersion` (currently **4**); the ingest refuses versions it
+  doesn't recognize rather than guessing.
+- `data/store.json` is canonical; `views/`, `graph/`, `dashboard.html` are generated.

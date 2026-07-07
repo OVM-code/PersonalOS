@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<!--
+PersonalOS DASHBOARD — GENERATED FILE (from templates/dashboard.html by os.mjs build).
+Do not edit dashboard.html at the repo root; edit the template and rebuild.
+Self-contained: data is embedded at build time, works offline from a file:// URL.
+-->
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>PersonalOS — the record</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#121714; --card:#191F1B; --card2:#1F2621; --ink:#E9E8DE; --muted:#8C988E;
+    --faint:#5E6A61; --line:#2A322C; --brass:#C49A44; --brass-soft:#2C2818;
+    --rust:#C86A4A; --rust-soft:#33221C;
+    --serif:'Cormorant Garamond', Georgia, serif;
+    --sans:'Archivo', -apple-system, 'Segoe UI', sans-serif;
+    --mono:'IBM Plex Mono', ui-monospace, monospace;
+  }
+  [data-theme="light"]{
+    --paper:#F3F3EE; --card:#FBFBF8; --card2:#F0F0E9; --ink:#1C2B26; --muted:#6E7C74;
+    --faint:#9AA69E; --line:#DCDCD2; --brass:#A6802E; --brass-soft:#EFE6CE;
+    --rust:#96482F; --rust-soft:#F2E4DE;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1080px;margin:0 auto;padding:44px 28px 120px;}
+  button{font-family:inherit;color:inherit;}
+  button:focus-visible,input:focus-visible{outline:2px solid var(--brass);outline-offset:2px;}
+
+  header{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+  h1{font-family:var(--serif);font-weight:500;font-size:clamp(34px,5.5vw,52px);line-height:.95;}
+  h1 em{font-style:italic;color:var(--brass);}
+  .gen{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:12px;}
+  .theme-btn{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--muted);background:none;border:1px solid var(--line);border-radius:999px;padding:9px 16px;cursor:pointer;}
+  .theme-btn:hover{color:var(--ink);border-color:var(--muted);}
+
+  .statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin:30px 0 8px;}
+  .statcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 18px;}
+  .statcard .v{font-family:var(--serif);font-size:30px;font-weight:500;line-height:1;}
+  .statcard .v.rust{color:var(--rust);}
+  .statcard .v.brass{color:var(--brass);}
+  .statcard .l{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:7px;}
+
+  nav.tabs{display:flex;gap:2px;margin:28px 0 0;border-bottom:1px solid var(--line);}
+  nav.tabs button{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent;padding:10px 16px;margin-bottom:-1px;cursor:pointer;}
+  nav.tabs button:hover{color:var(--ink);}
+  nav.tabs button.on{color:var(--ink);border-bottom-color:var(--brass);}
+  .pane{display:none;padding-top:26px;}
+  .pane.on{display:block;}
+
+  .searchbox{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 20px;}
+  .searchbox input{width:100%;border:none;background:transparent;font-family:var(--serif);font-size:22px;font-weight:500;color:var(--ink);padding:4px 0 12px;}
+  .searchbox input::placeholder{color:var(--faint);font-style:italic;}
+  .searchbox input:focus{outline:none;}
+  .chips{display:flex;gap:4px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:12px;align-items:center;}
+  .chips .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-right:4px;}
+  .chips button{font-size:12px;font-weight:500;color:var(--muted);background:transparent;border:1px solid transparent;border-radius:999px;padding:5px 12px;cursor:pointer;}
+  .chips button:hover{color:var(--ink);}
+  .chips button.on{background:var(--brass-soft);color:var(--ink);border-color:var(--brass);}
+
+  .results{margin-top:20px;}
+  .rgroup h4{font-family:var(--serif);font-style:italic;font-weight:500;font-size:20px;border-bottom:1px solid var(--muted);padding-bottom:6px;margin-top:26px;display:flex;gap:12px;align-items:baseline;}
+  .rgroup h4 .n{font-family:var(--mono);font-size:11px;color:var(--muted);font-style:normal;}
+  .r-item{display:flex;align-items:flex-start;gap:12px;padding:11px 2px;border-bottom:1px solid var(--line);cursor:pointer;}
+  .r-item:hover{background:var(--card);}
+  .r-item .body{flex:1;min-width:0;}
+  .r-item .t{overflow-wrap:break-word;}
+  .r-item .t a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--brass);}
+  .r-item .t mark{background:var(--brass-soft);color:var(--brass);border-radius:3px;padding:0 2px;}
+  .r-item.archived .t{color:var(--faint);}
+  .r-item .m{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:3px;display:flex;gap:10px;flex-wrap:wrap;}
+  .r-item .m .warn{color:var(--rust);}
+  .r-item .m .good{color:var(--brass);}
+  .badge{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--line);border-radius:5px;padding:2px 7px;color:var(--muted);flex:none;margin-top:2px;}
+  .empty{text-align:center;padding:56px 20px;color:var(--muted);}
+  .empty .big{font-family:var(--serif);font-style:italic;font-size:24px;color:var(--ink);margin-bottom:8px;}
+
+  .graphwrap{display:grid;grid-template-columns:1fr 300px;gap:16px;}
+  @media(max-width:820px){.graphwrap{grid-template-columns:1fr;}}
+  #graphCanvas{width:100%;height:560px;background:var(--card);border:1px solid var(--line);border-radius:14px;cursor:grab;touch-action:none;}
+  .gside{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;max-height:560px;overflow-y:auto;}
+  .gside h3{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:500;margin-bottom:12px;}
+  .gside .sel-title{font-family:var(--serif);font-size:21px;font-weight:500;line-height:1.25;overflow-wrap:break-word;}
+  .gside .sel-meta{font-family:var(--mono);font-size:10px;color:var(--muted);margin:8px 0 14px;}
+  .gside .conn{padding:7px 0;border-bottom:1px solid var(--line);cursor:pointer;font-size:13px;}
+  .gside .conn:hover{color:var(--brass);}
+  .gside .conn .rel{font-family:var(--mono);font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;display:block;}
+  .legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;font-family:var(--mono);font-size:10px;color:var(--muted);}
+  .legend span{display:flex;align-items:center;gap:5px;cursor:pointer;}
+  .legend span.off{opacity:.35;}
+  .legend i{display:inline-block;width:9px;height:9px;border-radius:50%;}
+  .hint{font-family:var(--mono);font-size:10px;color:var(--faint);margin-top:10px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">PersonalOS · system of record</div>
+      <h1>The <em>record</em></h1>
+      <div class="gen" id="gen"></div>
+    </div>
+    <button class="theme-btn" id="themeBtn">Light</button>
+  </header>
+
+  <div class="statgrid" id="stats"></div>
+
+  <nav class="tabs" id="tabs">
+    <button data-tab="search" class="on">Search</button>
+    <button data-tab="graph">Graph</button>
+  </nav>
+
+  <div class="pane on" id="pane-search">
+    <div class="searchbox">
+      <input type="search" id="q" placeholder="Search everything — loops, journal, wins, people, notes…" autocomplete="off">
+      <div class="chips" id="kindChips"><span class="lbl">Kind</span></div>
+      <div class="chips" id="stateChips" style="border-top:none;padding-top:6px;">
+        <span class="lbl">Include</span>
+        <button data-s="live" class="on">Live</button>
+        <button data-s="archived" class="on">Closed &amp; archived</button>
+      </div>
+    </div>
+    <div class="results" id="results"></div>
+  </div>
+
+  <div class="pane" id="pane-graph">
+    <div class="graphwrap">
+      <div>
+        <canvas id="graphCanvas"></canvas>
+        <div class="legend" id="legend"></div>
+        <p class="hint">Drag nodes · drag background to pan · scroll to zoom · click a node for its connections · click legend to toggle a kind.</p>
+      </div>
+      <div class="gside" id="gside"><h3>Knowledge graph</h3><p style="color:var(--muted);font-size:13px;">Click any node to see everything connected to it.</p></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+const OS = /*__OS_DATA__*/null;
+if(!OS){ document.body.innerHTML = '<div style="padding:60px;text-align:center;font-family:monospace">No data embedded — run <b>node os.mjs build</b> to generate this dashboard.</div>'; return; }
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s??'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const DAY = 86400000;
+const DOMAINS = {work:'Work',venture:'Venture',speaking:'Public speaking',writing:'Writing',life:'Life ops',money:'Money',property:'Property'};
+const KIND_LABEL = {loop:'Open loops',goal:'Goals',habit:'Habits',journal:'Journal',win:'Wins',manifest:'Manifest',pipeline:'Pipeline',event:'Events',library:'Library',person:'People',topic:'Topics',grocery:'Grocery'};
+const TYPE_COLORS = {loop:'#C49A44',goal:'#7FB069',habit:'#5B9BD5',person:'#C86A4A',topic:'#9B8AC4',event:'#4AA5A2',manifest:'#D4A5C9',win:'#E0C56E',library:'#8C988E',pipeline:'#B0713F',domain:'#5E6A61'};
+
+/* theme */
+function applyTheme(t){ document.documentElement.dataset.theme=t; $('#themeBtn').textContent = t==='dark'?'Light':'Dark'; try{localStorage.setItem('osdash.theme',t);}catch(e){} }
+applyTheme((function(){try{return localStorage.getItem('osdash.theme')||'dark';}catch(e){return 'dark';}})());
+$('#themeBtn').addEventListener('click',()=>applyTheme(document.documentElement.dataset.theme==='dark'?'light':'dark'));
+
+/* header + stats */
+const L = OS.live, A = OS.archive;
+$('#gen').textContent = 'generated ' + OS.generated.slice(0,16).replace('T',' ') +
+  (OS.lastIngest ? ' · last ingest ' + (OS.lastIngest.exported||'').slice(0,10) : ' · nothing ingested yet');
+const dueDays = d => { if(!d) return null; const t=new Date(); t.setHours(0,0,0,0); return Math.round((new Date(d+'T00:00:00')-t)/DAY); };
+const ageDays = iso => Math.floor((Date.now()-new Date(iso).getTime())/DAY);
+const STALE = {followup:7,decision:14,idea:null,recurring:null};
+const isStale = it => STALE[it.type]!=null && ageDays(it.created) > STALE[it.type];
+const overdue = L.items.filter(i=>{const d=dueDays(i.due);return d!==null&&d<0;}).length;
+const stale = L.items.filter(isStale).length;
+$('#stats').innerHTML = [
+  ['Open loops', L.items.length, ''],
+  ['Overdue', overdue, overdue?'rust':''],
+  ['Stale', stale, stale?'rust':''],
+  ['Wins', L.wins.length, 'brass'],
+  ['Journal days', Object.keys(L.journal).length, ''],
+  ['Closed (kept)', A.items.length, ''],
+  ['Graph nodes', OS.graph.nodes.length, 'brass'],
+].map(([l,v,c])=>'<div class="statcard"><div class="v '+c+'">'+v+'</div><div class="l">'+l+'</div></div>').join('');
+
+/* tabs */
+$('#tabs').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-tab]'); if(!b) return;
+  document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
+  $('#pane-'+b.dataset.tab).classList.add('on');
+  if(b.dataset.tab==='graph') graphBoot();
+});
+
+/* ── search docs ── */
+const docs = [];
+const push = (kind,id,title,body,meta,arch,extra)=>docs.push({kind,id,title:title||'',body:body||'',meta:meta||[],arch:!!arch,extra:extra||{}});
+const both = k => L[k].map(r=>[r,false]).concat((A[k]||[]).map(r=>[r,true]));
+for(const [r,arch] of both('items')){
+  const meta=[DOMAINS[r.domain]||r.domain, r.type];
+  const dd=dueDays(r.due);
+  if(!arch&&dd!==null) meta.push({t:dd<0?'overdue '+(-dd)+'d':'due in '+dd+'d',c:dd<0?'warn':'good'});
+  if(!arch&&isStale(r)) meta.push({t:'stale',c:'warn'});
+  if(r.who) meta.push('⇢ '+r.who);
+  if(arch) meta.push('archived '+(r.archivedAt||'').slice(0,10));
+  push('loop',r.id,r.text,[r.note,r.nextStep,r.who].filter(Boolean).join(' · '),meta,arch);
+}
+for(const [r,arch] of both('goals')){ if(r.yearly||r.monthly||r.weekly) push('goal',r.id,r.yearly||r.monthly,['month: '+(r.monthly||'—'),'week: '+(r.weekly||'—')].join(' · '),[],arch); }
+for(const [r,arch] of both('habits')) push('habit',r.id,r.name,'',['target '+(r.target||'—')+'/wk', Object.keys(r.checks||{}).length+' checks'],arch);
+for(const [r,arch] of both('wins')) push('win',r.id,r.text,'',[(r.t||'').slice(0,10)],arch);
+for(const [r,arch] of both('manifest')) push('manifest',r.id,r.text,r.why,[r.realized?'realized '+r.realized.slice(0,10):'active'],arch);
+for(const [r,arch] of both('pipeline')) push('pipeline',r.id,r.name,'',[['Prospect','Preview sent','Call','Client'][r.stage]||''],arch);
+for(const [r,arch] of both('library')) push('library',r.id,r.title,r.note,[r.kind, r.done?'done':'open'],arch,{url:r.url});
+for(const [r,arch] of both('events')) push('event',r.id,r.title,r.note,[r.mode, r.date||''],arch,{url:r.url});
+for(const [r,arch] of both('grocery')) push('grocery',r.id,r.text,'',[r.cat],arch);
+for(const [day,e] of Object.entries(L.journal)){ if(e.mind||e.track||e.mood||e.energy) push('journal',day,day,[e.mind,e.track].filter(Boolean).join(' · '),[(e.mood?'mood '+e.mood+'/5':''),(e.energy?'energy '+e.energy+'/5':'')].filter(Boolean),false); }
+for(const n of OS.graph.nodes){ if(n.type==='person') push('person',n.id,n.label,'',['knowledge graph'],false); if(n.type==='topic') push('topic',n.id,n.label,'',['knowledge graph'],false); }
+
+/* chips */
+const kinds = ['all','loop','journal','goal','habit','win','manifest','pipeline','event','library','person','topic','grocery'];
+let kind='all', showLive=true, showArch=true;
+$('#kindChips').insertAdjacentHTML('beforeend', kinds.map(k=>'<button data-k="'+k+'"'+(k==='all'?' class="on"':'')+'>'+(k==='all'?'All':KIND_LABEL[k]||k)+'</button>').join(''));
+$('#kindChips').addEventListener('click',e=>{ const b=e.target.closest('button[data-k]'); if(!b)return; kind=b.dataset.k; document.querySelectorAll('#kindChips button').forEach(x=>x.classList.toggle('on',x===b)); renderResults(); });
+$('#stateChips').addEventListener('click',e=>{ const b=e.target.closest('button[data-s]'); if(!b)return; b.classList.toggle('on'); if(b.dataset.s==='live') showLive=b.classList.contains('on'); else showArch=b.classList.contains('on'); renderResults(); });
+$('#q').addEventListener('input', renderResults);
+
+function highlight(text,q){
+  if(!q) return esc(text);
+  const i = text.toLowerCase().indexOf(q);
+  if(i<0) return esc(text);
+  return esc(text.slice(0,i))+'<mark>'+esc(text.slice(i,i+q.length))+'</mark>'+esc(text.slice(i+q.length));
+}
+function renderResults(){
+  const q = $('#q').value.toLowerCase().trim();
+  let hits = docs.filter(d=>{
+    if(kind!=='all'&&d.kind!==kind) return false;
+    if(d.arch&&!showArch) return false;
+    if(!d.arch&&!showLive) return false;
+    if(!q) return true;
+    return d.title.toLowerCase().includes(q)||d.body.toLowerCase().includes(q)||d.meta.some(m=>String(m.t||m).toLowerCase().includes(q));
+  });
+  if(q) hits.sort((a,b)=>(b.title.toLowerCase().includes(q)?3:1)-(a.title.toLowerCase().includes(q)?3:1));
+  const box=$('#results');
+  if(!hits.length){ box.innerHTML='<div class="empty"><div class="big">Nothing found.</div>'+(docs.length?'Try fewer words or another kind.':'Ingest your first export to fill the record.')+'</div>'; return; }
+  const groups={};
+  for(const h of hits.slice(0,400)) (groups[h.kind]||=[]).push(h);
+  let html='';
+  for(const k of kinds.slice(1)){
+    const g=groups[k]; if(!g) continue;
+    html+='<div class="rgroup"><h4>'+(KIND_LABEL[k]||k)+' <span class="n">'+g.length+'</span></h4>';
+    for(const h of g){
+      const title = h.extra.url ? '<a href="'+esc(h.extra.url)+'" target="_blank" rel="noopener">'+highlight(h.title,q)+'</a>' : highlight(h.title,q);
+      html+='<div class="r-item'+(h.arch?' archived':'')+'" data-gid="'+esc(nodeIdFor(h))+'">'+
+        '<span class="badge">'+k+(h.arch?' ·closed':'')+'</span>'+
+        '<div class="body"><div class="t">'+title+'</div>'+
+        (h.body?'<div class="m">'+highlight(h.body.slice(0,180),q)+'</div>':'')+
+        (h.meta.length?'<div class="m">'+h.meta.map(m=>typeof m==='object'?'<span class="'+m.c+'">'+esc(m.t)+'</span>':'<span>'+esc(m)+'</span>').join(''):'')+'</div></div></div>';
+    }
+    html+='</div>';
+  }
+  if(hits.length>400) html+='<p class="hint">Showing 400 of '+hits.length+'.</p>';
+  box.innerHTML=html;
+}
+function nodeIdFor(doc){
+  if(doc.kind==='person'||doc.kind==='topic') return doc.id;
+  return doc.kind+':'+doc.id;
+}
+$('#results').addEventListener('click',e=>{
+  if(e.target.closest('a')) return;
+  const row=e.target.closest('[data-gid]'); if(!row) return;
+  const node=OS.graph.nodes.find(n=>n.id===row.dataset.gid);
+  if(!node) return;
+  document.querySelector('#tabs button[data-tab="graph"]').click();
+  graphBoot(); selectNode(node.id);
+});
+renderResults();
+
+/* ── graph ── */
+let G=null, sim=null, booted=false, selected=null;
+const hiddenTypes=new Set();
+function graphBoot(){
+  if(booted){ resize(); return; }
+  booted=true;
+  const nodes=OS.graph.nodes.map(n=>({...n}));
+  const byId=new Map(nodes.map(n=>[n.id,n]));
+  const edges=OS.graph.edges.filter(e=>byId.has(e.source)&&byId.has(e.target)).map(e=>({...e}));
+  const deg={}; edges.forEach(e=>{deg[e.source]=(deg[e.source]||0)+1;deg[e.target]=(deg[e.target]||0)+1;});
+  // deterministic initial layout: golden-angle spiral (no Math.random needed)
+  nodes.forEach((n,i)=>{ const a=i*2.399963, r=14*Math.sqrt(i+1); n.x=Math.cos(a)*r; n.y=Math.sin(a)*r; n.vx=0; n.vy=0; n.deg=deg[n.id]||0; });
+  G={nodes,edges,byId, tx:0, ty:0, scale:1, alpha:1};
+  const cv=$('#graphCanvas');
+  resize();
+  let dragging=null, panning=false, px=0, py=0, moved=false;
+  const pos=ev=>{ const r=cv.getBoundingClientRect(); const p=ev.touches?ev.touches[0]:ev;
+    return [ (p.clientX-r.left-cv.clientWidth/2)/G.scale - G.tx, (p.clientY-r.top-cv.clientHeight/2)/G.scale - G.ty ]; };
+  const hit=(x,y)=>{ let best=null,bd=1e9; for(const n of visNodes()){ const d=(n.x-x)**2+(n.y-y)**2; const rr=(nodeR(n)+4)**2; if(d<rr&&d<bd){bd=d;best=n;} } return best; };
+  const down=ev=>{ const [x,y]=pos(ev); const n=hit(x,y); moved=false;
+    if(n){ dragging=n; n.fx=x; n.fy=y; } else { panning=true; const p=ev.touches?ev.touches[0]:ev; px=p.clientX; py=p.clientY; }
+    G.alpha=Math.max(G.alpha,.3); ev.preventDefault(); };
+  const move=ev=>{ if(dragging){ const [x,y]=pos(ev); dragging.x=x; dragging.y=y; dragging.vx=0; dragging.vy=0; moved=true; G.alpha=Math.max(G.alpha,.3); }
+    else if(panning){ const p=ev.touches?ev.touches[0]:ev; G.tx+=(p.clientX-px)/G.scale; G.ty+=(p.clientY-py)/G.scale; px=p.clientX; py=p.clientY; moved=true; } };
+  const up=ev=>{ if(dragging&&!moved) selectNode(dragging.id);
+    else if(panning&&!moved){ const [x,y]=pos(ev.changedTouches?ev.changedTouches[0]?{clientX:ev.changedTouches[0].clientX,clientY:ev.changedTouches[0].clientY}:ev:ev); const n=hit(x,y); selectNode(n?n.id:null); }
+    dragging=null; panning=false; };
+  cv.addEventListener('mousedown',down); cv.addEventListener('mousemove',move); window.addEventListener('mouseup',up);
+  cv.addEventListener('touchstart',down,{passive:false}); cv.addEventListener('touchmove',move,{passive:false}); cv.addEventListener('touchend',up);
+  cv.addEventListener('wheel',ev=>{ ev.preventDefault(); G.scale=Math.min(4,Math.max(.25,G.scale*(ev.deltaY<0?1.12:0.89))); },{passive:false});
+  // legend
+  const types=[...new Set(nodes.map(n=>n.type))];
+  $('#legend').innerHTML=types.map(t=>'<span data-t="'+t+'"><i style="background:'+(TYPE_COLORS[t]||'#888')+'"></i>'+t+'</span>').join('');
+  $('#legend').addEventListener('click',e=>{ const s=e.target.closest('[data-t]'); if(!s)return;
+    const t=s.dataset.t; hiddenTypes.has(t)?hiddenTypes.delete(t):hiddenTypes.add(t); s.classList.toggle('off'); G.alpha=Math.max(G.alpha,.4); });
+  requestAnimationFrame(tick);
+}
+function resize(){ const cv=$('#graphCanvas'); const dpr=window.devicePixelRatio||1;
+  cv.width=cv.clientWidth*dpr; cv.height=cv.clientHeight*dpr; }
+window.addEventListener('resize',()=>{ if(booted) resize(); });
+const nodeR=n=>Math.min(16, 4+Math.sqrt(n.deg||0)*2.2 + (n.type==='domain'||n.type==='goal'?3:0));
+const visNodes=()=>G.nodes.filter(n=>!hiddenTypes.has(n.type));
+function tick(){
+  const vis=visNodes(), visSet=new Set(vis.map(n=>n.id));
+  if(G.alpha>0.005){
+    // repulsion
+    for(let i=0;i<vis.length;i++) for(let j=i+1;j<vis.length;j++){
+      const a=vis[i],b=vis[j]; let dx=b.x-a.x, dy=b.y-a.y; let d2=dx*dx+dy*dy||1; if(d2>90000) continue;
+      const f=900/d2*G.alpha; const d=Math.sqrt(d2); dx/=d; dy/=d;
+      a.vx-=dx*f; a.vy-=dy*f; b.vx+=dx*f; b.vy+=dy*f;
+    }
+    // springs
+    for(const e of G.edges){ if(!visSet.has(e.source)||!visSet.has(e.target)) continue;
+      const a=G.byId.get(e.source), b=G.byId.get(e.target);
+      let dx=b.x-a.x, dy=b.y-a.y; const d=Math.sqrt(dx*dx+dy*dy)||1;
+      const f=(d-70)*0.02*G.alpha; dx/=d; dy/=d;
+      a.vx+=dx*f*d*0.02; a.vy+=dy*f*d*0.02; b.vx-=dx*f*d*0.02; b.vy-=dy*f*d*0.02;
+    }
+    // gravity + integrate
+    for(const n of vis){ n.vx-=n.x*0.003*G.alpha; n.vy-=n.y*0.003*G.alpha;
+      n.vx*=.85; n.vy*=.85; n.x+=n.vx; n.y+=n.vy; }
+    G.alpha*=0.985;
+  }
+  draw(vis,visSet);
+  requestAnimationFrame(tick);
+}
+function draw(vis,visSet){
+  const cv=$('#graphCanvas'), ctx=cv.getContext('2d'), dpr=window.devicePixelRatio||1;
+  const css=getComputedStyle(document.documentElement);
+  const inkC=css.getPropertyValue('--ink').trim(), lineC=css.getPropertyValue('--line').trim(), mutedC=css.getPropertyValue('--muted').trim();
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,cv.clientWidth,cv.clientHeight);
+  ctx.save();
+  ctx.translate(cv.clientWidth/2,cv.clientHeight/2); ctx.scale(G.scale,G.scale); ctx.translate(G.tx,G.ty);
+  const neigh=new Set();
+  if(selected){ neigh.add(selected); for(const e of G.edges){ if(e.source===selected)neigh.add(e.target); if(e.target===selected)neigh.add(e.source);} }
+  for(const e of G.edges){ if(!visSet.has(e.source)||!visSet.has(e.target)) continue;
+    const a=G.byId.get(e.source), b=G.byId.get(e.target);
+    const hot=selected&&(e.source===selected||e.target===selected);
+    ctx.strokeStyle=hot?css.getPropertyValue('--brass').trim():lineC;
+    ctx.globalAlpha=selected&&!hot?.15:hot?.9:.5;
+    ctx.lineWidth=(hot?1.6:.8)/G.scale;
+    ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+  }
+  for(const n of vis){
+    const r=nodeR(n), dim=selected&&!neigh.has(n.id);
+    ctx.globalAlpha=dim?.2:1;
+    ctx.fillStyle=TYPE_COLORS[n.type]||'#888';
+    ctx.beginPath(); ctx.arc(n.x,n.y,r,0,7); ctx.fill();
+    if(n.archived){ ctx.globalAlpha=dim?.1:.55; ctx.fillStyle=css.getPropertyValue('--paper').trim(); ctx.beginPath(); ctx.arc(n.x,n.y,r*.55,0,7); ctx.fill(); }
+    if(n.id===selected){ ctx.globalAlpha=1; ctx.strokeStyle=inkC; ctx.lineWidth=2/G.scale; ctx.beginPath(); ctx.arc(n.x,n.y,r+2.5,0,7); ctx.stroke(); }
+    if((n.deg>=3||n.type==='domain'||n.type==='goal'||n.id===selected||neigh.has(n.id))&&G.scale>.45){
+      ctx.globalAlpha=dim?.25:.95; ctx.fillStyle=n.id===selected?inkC:mutedC;
+      ctx.font=(n.id===selected?600:400)+' '+(10/G.scale>10?10/G.scale:10)+'px Archivo, sans-serif';
+      ctx.textAlign='center';
+      const lbl=n.label.length>26?n.label.slice(0,25)+'…':n.label;
+      ctx.fillText(lbl,n.x,n.y+r+11);
+    }
+  }
+  ctx.restore();
+  ctx.globalAlpha=1;
+}
+function selectNode(id){
+  selected=id;
+  const side=$('#gside');
+  if(!id){ side.innerHTML='<h3>Knowledge graph</h3><p style="color:var(--muted);font-size:13px;">Click any node to see everything connected to it.</p>'; return; }
+  const n=G.byId.get(id); if(!n) return;
+  const conns=G.edges.filter(e=>e.source===id||e.target===id).map(e=>({rel:e.rel, other:G.byId.get(e.source===id?e.target:e.source)})).filter(c=>c.other);
+  let meta=[n.type]; if(n.archived) meta.push('archived'); if(n.domain) meta.push(DOMAINS[n.domain]||n.domain);
+  if(n.stage) meta.push(String(n.stage)); if(n.date) meta.push(n.date); if(n.due) meta.push('due '+n.due);
+  side.innerHTML='<h3>Selected</h3><div class="sel-title">'+esc(n.label)+'</div>'+
+    '<div class="sel-meta">'+meta.map(esc).join(' · ')+'</div>'+
+    '<h3>'+conns.length+' connection'+(conns.length===1?'':'s')+'</h3>'+
+    conns.map(c=>'<div class="conn" data-go="'+esc(c.other.id)+'"><span class="rel">'+esc(c.rel)+' · '+esc(c.other.type)+'</span>'+esc(c.other.label)+'</div>').join('');
+  G.alpha=Math.max(G.alpha,.1);
+}
+$('#gside').addEventListener('click',e=>{ const c=e.target.closest('[data-go]'); if(c) selectNode(c.dataset.go); });
+})();
+</script>
+</body>
+</html>

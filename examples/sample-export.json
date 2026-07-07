@@ -1,0 +1,49 @@
+{
+  "_meta": {"app":"open-loops","schemaVersion":4,"exported":"2026-07-06T18:30:00.000Z"},
+  "items": [
+    {"id":"m1a2b3","text":"Send Copilot workshop proposal to Delaware #copilot","domain":"venture","type":"followup","created":"2026-06-28T08:00:00.000Z","note":"They asked after the June demo. Anna wants pricing tiers.","nextStep":"Draft 3-tier pricing","due":"2026-07-10","who":"Anna","star":true,"goalId":"g-rev","doneThisWeek":false,"weekKey":""},
+    {"id":"m4c5d6","text":"Decide: keep or sell the Ghent flat #property","domain":"property","type":"decision","created":"2026-06-15T08:00:00.000Z","note":"","nextStep":"Get valuation from Tom","due":null,"who":"Tom","star":false,"goalId":"","doneThisWeek":false,"weekKey":""},
+    {"id":"m7e8f9","text":"Outline keynote on AI adoption #copilot #speaking","domain":"speaking","type":"idea","created":"2026-07-02T08:00:00.000Z","note":"","nextStep":"","due":null,"who":"","star":false,"goalId":"g-speak","doneThisWeek":false,"weekKey":""},
+    {"id":"mrec01","text":"Weekly review of venture pipeline","domain":"venture","type":"recurring","created":"2026-06-01T08:00:00.000Z","note":"","nextStep":"","due":null,"who":"","star":false,"goalId":"g-rev","doneThisWeek":true,"weekKey":"2026-W28"}
+  ],
+  "log": [
+    {"t":"2026-06-15T08:00:00.000Z","a":"added","g":""},
+    {"t":"2026-06-28T08:00:00.000Z","a":"added","g":""},
+    {"t":"2026-07-01T09:00:00.000Z","a":"closed","g":"Grow venture revenue"},
+    {"t":"2026-07-02T08:00:00.000Z","a":"added","g":""}
+  ],
+  "goals": [
+    {"id":"g-rev","yearly":"Grow venture revenue","monthly":"Two new client proposals out","weekly":"Delaware proposal sent"},
+    {"id":"g-speak","yearly":"Speak at 6 events this year","monthly":"Keynote outline drafted","weekly":"Pick the angle"}
+  ],
+  "goalHistory": [{"month":"2026-06","goals":[{"yearly":"Grow venture revenue","monthly":"Demo for Delaware","weekly":"Prep demo"}]}],
+  "habits": [
+    {"id":"h-writ","name":"30 min writing before mail #writing","goalId":"g-speak","target":5,"checks":{"2026-07-01":true,"2026-07-02":true,"2026-07-04":true}},
+    {"id":"h-walk","name":"Evening walk","goalId":"","target":7,"checks":{"2026-07-03":true,"2026-07-04":true,"2026-07-05":true}}
+  ],
+  "journal": {
+    "2026-07-05": {"mood":4,"energy":3,"mind":"Good weekend, head is clear. The Delaware thing excites me.","track":"On track — send the proposal Monday."},
+    "2026-07-06": {"mood":3,"energy":4,"mind":"Monday scatter. Too many tabs open, literally and mentally.","track":"Proposal first, everything else after."}
+  },
+  "wins": [
+    {"id":"w-cli1","text":"New client: Fabrik Studio","t":"2026-06-20T14:00:00.000Z"},
+    {"id":"w-talk","text":"Delivered the June demo without notes","t":"2026-06-25T16:00:00.000Z"}
+  ],
+  "manifest": [{"id":"mf-01","text":"I run a calm business that funds a spacious life","why":"So work serves life, not the reverse","created":"2026-05-01T10:00:00.000Z","realized":null}],
+  "pipeline": [
+    {"id":"p-fab","name":"Fabrik Studio","stage":3,"since":"2026-06-20T14:00:00.000Z"},
+    {"id":"p-del","name":"Delaware","stage":1,"since":"2026-06-28T09:00:00.000Z"},
+    {"id":"p-nov","name":"Novak & Co","stage":0,"since":"2026-07-01T09:00:00.000Z"}
+  ],
+  "grocery": [{"id":"gr-01","text":"Feta","cat":"dairy","checked":false}],
+  "library": [
+    {"id":"l-b1","kind":"book","title":"The Creative Act — Rick Rubin","url":"","note":"","done":false,"created":"2026-06-10T10:00:00.000Z"},
+    {"id":"l-r1","kind":"recipe","title":"Shakshuka with feta","url":"","note":"weeknight","done":false,"created":"2026-06-12T10:00:00.000Z"},
+    {"id":"l-l1","kind":"link","title":"Copilot adoption playbook","url":"https://example.com/playbook","note":"#copilot for the workshop","done":false,"created":"2026-07-01T10:00:00.000Z"}
+  ],
+  "events": [
+    {"id":"e-conf","mode":"attend","title":"AI conference Antwerp #copilot","date":"2026-09-18","url":"","note":"","stage":1,"created":"2026-06-20T10:00:00.000Z"},
+    {"id":"e-supper","mode":"organize","title":"Autumn supper club","date":null,"url":"","note":"12 people max","stage":1,"created":"2026-06-22T10:00:00.000Z"}
+  ],
+  "lastSweep":"2026-07-05T19:00:00.000Z","goalMonth":"2026-07","pendingGoalReset":false,"lastExport":"2026-07-06T18:30:00.000Z","theme":"dark"
+}

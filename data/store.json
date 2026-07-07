@@ -1,0 +1,39 @@
+{
+  "_meta": {
+    "app": "personalos-store",
+    "storeVersion": 1,
+    "toolSchemaVersion": 4,
+    "created": "2026-07-07T10:58:01.483Z",
+    "lastIngest": null
+  },
+  "live": {
+    "items": [],
+    "log": [],
+    "goals": [],
+    "goalHistory": [],
+    "habits": [],
+    "journal": {},
+    "wins": [],
+    "manifest": [],
+    "pipeline": [],
+    "grocery": [],
+    "library": [],
+    "events": [],
+    "lastSweep": null,
+    "goalMonth": "",
+    "pendingGoalReset": false,
+    "lastExport": null,
+    "theme": "dark"
+  },
+  "archive": {
+    "items": [],
+    "goals": [],
+    "habits": [],
+    "wins": [],
+    "manifest": [],
+    "pipeline": [],
+    "grocery": [],
+    "library": [],
+    "events": []
+  }
+}
