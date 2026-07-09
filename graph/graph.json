@@ -1,5 +1,11 @@
 {
   "asOf": null,
-  "nodes": [],
+  "nodes": [
+    {
+      "id": "note:welcome",
+      "type": "note",
+      "label": "Welcome to your vault"
+    }
+  ],
   "edges": []
 }

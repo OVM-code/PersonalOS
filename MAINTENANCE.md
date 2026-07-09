@@ -22,6 +22,9 @@ anything under `data/`.
 6. **Zero dependencies.** `os.mjs` and both HTML files use only Node/browser built-ins.
    No npm packages, no CDN scripts, no build step. This is a feature: nothing to
    update, nothing to break, works offline.
+6b. **`notes/` is user-canonical.** Build and ingest read it (graph enrichment,
+   dashboard search) but must never create, modify, or delete anything under it —
+   it is the user's hand-written Obsidian content, on par with the store itself.
 7. **Privacy.** The dashboard and store contain journal entries. Never publish them
    (GitHub Pages, public artifacts, pastes into issues) without the owner explicitly
    agreeing in that conversation.

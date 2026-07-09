@@ -143,15 +143,15 @@ Self-contained: data is embedded at build time, works offline from a file:// URL
 <script>
 (function(){
 'use strict';
-const OS = {"live":{"items":[],"log":[],"goals":[],"goalHistory":[],"habits":[],"journal":{},"wins":[],"manifest":[],"pipeline":[],"grocery":[],"library":[],"events":[],"lastSweep":null,"goalMonth":"","pendingGoalReset":false,"lastExport":null,"theme":"dark"},"archive":{"items":[],"goals":[],"habits":[],"wins":[],"manifest":[],"pipeline":[],"grocery":[],"library":[],"events":[]},"graph":{"asOf":null,"nodes":[],"edges":[]},"lastIngest":null};
+const OS = {"live":{"items":[],"log":[],"goals":[],"goalHistory":[],"habits":[],"journal":{},"wins":[],"manifest":[],"pipeline":[],"grocery":[],"library":[],"events":[],"lastSweep":null,"goalMonth":"","pendingGoalReset":false,"lastExport":null,"theme":"dark"},"archive":{"items":[],"goals":[],"habits":[],"wins":[],"manifest":[],"pipeline":[],"grocery":[],"library":[],"events":[]},"graph":{"asOf":null,"nodes":[{"id":"note:welcome","type":"note","label":"Welcome to your vault"}],"edges":[]},"lastIngest":null,"notes":[{"id":"note:welcome","rel":"welcome.md","title":"Welcome to your vault","text":"# Welcome to your vault\n\nThis folder — `notes/` — is **yours**. Everything here is hand-written, canonical, and\nnever touched by the build. Everything *outside* it under `views/` is generated from the\ncapture tool's data: read it, link to it, but never edit it (edits are wiped on the next\nbuild).\n\nHow your notes join the knowledge graph on every `node os.mjs build`:\n\n- Hashtags anywhere become topic nodes — the same tags you use in the capture tool, so\n  a tag connects a note to loops, wins, and events that share it.\n- Wikilinks resolve automatically: `[[Anna]]` links to the person page of anyone you've\n  ever been *waiting on*; `[[Buy the apartment]]` links a note to that goal;\n  `[[another-note]]` links notes to each other. (Links written inside backticks, like\n  the examples above, stay plain text — same as in Obsidian.)\n- Mentioning a known person by name in plain text links the note to them too.\n\nYour notes then show up in `dashboard.html` search and its graph, alongside everything\nfrom the capture tool. Run `node os.mjs doctor` to catch misspelled wikilinks.\n\nStart anywhere — a [[wins]] link works today, and this note can be edited or deleted\nfreely. It's just a note.\n"}]};
 if(!OS){ document.body.innerHTML = '<div style="padding:60px;text-align:center;font-family:monospace">No data embedded — run <b>node os.mjs build</b> to generate this dashboard.</div>'; return; }
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s??'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const DAY = 86400000;
 const DOMAINS = {work:'Work',venture:'Venture',speaking:'Public speaking',writing:'Writing',life:'Life ops',money:'Money',property:'Property'};
-const KIND_LABEL = {loop:'Open loops',goal:'Goals',habit:'Habits',journal:'Journal',win:'Wins',manifest:'Manifest',pipeline:'Pipeline',event:'Events',library:'Library',person:'People',topic:'Topics',grocery:'Grocery'};
-const TYPE_COLORS = {loop:'#C49A44',goal:'#7FB069',habit:'#5B9BD5',person:'#C86A4A',topic:'#9B8AC4',event:'#4AA5A2',manifest:'#D4A5C9',win:'#E0C56E',library:'#8C988E',pipeline:'#B0713F',domain:'#5E6A61'};
+const KIND_LABEL = {loop:'Open loops',goal:'Goals',habit:'Habits',journal:'Journal',note:'Notes',win:'Wins',manifest:'Manifest',pipeline:'Pipeline',event:'Events',library:'Library',person:'People',topic:'Topics',grocery:'Grocery'};
+const TYPE_COLORS = {loop:'#C49A44',goal:'#7FB069',habit:'#5B9BD5',person:'#C86A4A',topic:'#9B8AC4',event:'#4AA5A2',manifest:'#D4A5C9',win:'#E0C56E',library:'#8C988E',pipeline:'#B0713F',domain:'#5E6A61',note:'#A3B18A'};
 
 /* theme */
 function applyTheme(t){ document.documentElement.dataset.theme=t; $('#themeBtn').textContent = t==='dark'?'Light':'Dark'; try{localStorage.setItem('osdash.theme',t);}catch(e){} }
@@ -208,10 +208,11 @@ for(const [r,arch] of both('library')) push('library',r.id,r.title,r.note,[r.kin
 for(const [r,arch] of both('events')) push('event',r.id,r.title,r.note,[r.mode, r.date||''],arch,{url:r.url});
 for(const [r,arch] of both('grocery')) push('grocery',r.id,r.text,'',[r.cat],arch);
 for(const [day,e] of Object.entries(L.journal)){ if(e.mind||e.track||e.mood||e.energy) push('journal',day,day,[e.mind,e.track].filter(Boolean).join(' · '),[(e.mood?'mood '+e.mood+'/5':''),(e.energy?'energy '+e.energy+'/5':'')].filter(Boolean),false); }
+for(const n of OS.notes||[]) push('note',n.id,n.title,n.text.slice(0,4000),['notes/'+n.rel],false);
 for(const n of OS.graph.nodes){ if(n.type==='person') push('person',n.id,n.label,'',['knowledge graph'],false); if(n.type==='topic') push('topic',n.id,n.label,'',['knowledge graph'],false); }
 
 /* chips */
-const kinds = ['all','loop','journal','goal','habit','win','manifest','pipeline','event','library','person','topic','grocery'];
+const kinds = ['all','loop','journal','note','goal','habit','win','manifest','pipeline','event','library','person','topic','grocery'];
 let kind='all', showLive=true, showArch=true;
 $('#kindChips').insertAdjacentHTML('beforeend', kinds.map(k=>'<button data-k="'+k+'"'+(k==='all'?' class="on"':'')+'>'+(k==='all'?'All':KIND_LABEL[k]||k)+'</button>').join(''));
 $('#kindChips').addEventListener('click',e=>{ const b=e.target.closest('button[data-k]'); if(!b)return; kind=b.dataset.k; document.querySelectorAll('#kindChips button').forEach(x=>x.classList.toggle('on',x===b)); renderResults(); });
@@ -256,7 +257,7 @@ function renderResults(){
   box.innerHTML=html;
 }
 function nodeIdFor(doc){
-  if(doc.kind==='person'||doc.kind==='topic') return doc.id;
+  if(doc.kind==='person'||doc.kind==='topic'||doc.kind==='note') return doc.id;
   return doc.kind+':'+doc.id;
 }
 $('#results').addEventListener('click',e=>{

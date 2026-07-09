@@ -1,0 +1,11 @@
+{
+  "colorGroups": [
+    { "query": "path:notes", "color": { "a": 1, "rgb": 10727818 } },
+    { "query": "path:views/people", "color": { "a": 1, "rgb": 13134410 } },
+    { "query": "path:views/goals", "color": { "a": 1, "rgb": 8368233 } },
+    { "query": "path:views/loops", "color": { "a": 1, "rgb": 12884548 } },
+    { "query": "path:views/journal", "color": { "a": 1, "rgb": 6003669 } }
+  ],
+  "showTags": true,
+  "showOrphans": true
+}

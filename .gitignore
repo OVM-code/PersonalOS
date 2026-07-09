@@ -2,3 +2,9 @@
 writeback-*.json
 node_modules/
 .DS_Store
+
+# Obsidian vault: commit only the shared config; workspace/cache/plugins are per-machine
+.obsidian/*
+!.obsidian/app.json
+!.obsidian/appearance.json
+!.obsidian/graph.json

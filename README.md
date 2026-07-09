@@ -39,6 +39,24 @@ merged into one record, connected into a searchable knowledge graph.
    import it in the tool and choose **MERGE**. Ids are stable, so edits made on the OS
    side update the matching records on the device instead of duplicating them.
 
+## Obsidian (desktop)
+
+The repo is also an **Obsidian vault**: clone it, then in Obsidian choose *Open folder
+as vault* and pick the repo folder. Shared settings are committed (`.obsidian/` — only
+the config; your workspace stays local).
+
+- **Read** the generated `views/` — every person and goal has its own page, everything
+  is linked, and Obsidian's graph view shows your whole record.
+- **Write** in `notes/` — yours alone, never generated, never wiped. Use `#tags` and
+  `[[wikilinks]]` (`[[Anna]]`, `[[Buy the apartment]]`, `[[some-note]]`); on the next
+  `node os.mjs build` your notes join the knowledge graph and dashboard search.
+  `node os.mjs doctor` flags misspelled wikilinks.
+- **Never edit `views/`** — those files are regenerated from the store and your edits
+  would be wiped. Obsidian makes editing easy; the do-not-edit header in each file is
+  your reminder.
+- Pull before you write, commit after (or just run `node os.mjs sync`). Desktop-only
+  by design — your phone keeps the capture-tool + GitHub-upload flow.
+
 ## Connecting things (the graph)
 
 - Put **#hashtags** in any text — loop, note, habit name, event, library item, win —

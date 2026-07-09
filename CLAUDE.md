@@ -33,12 +33,18 @@ If the tool bumps its schema, read the tool's header comment, update the parsing
 deliberately, add the new version to `KNOWN_SCHEMA_VERSIONS`, and extend `node os.mjs
 selftest` to cover it.
 
-**3. `data/store.json` is canonical. Everything else is generated.**
+**3. `data/store.json` and `notes/` are canonical. Everything else is generated.**
 
 `views/`, `graph/graph.json`, and `dashboard.html` are build artifacts — never hand-edit
 them; they are wiped and rewritten by `node os.mjs build`. To change data from the OS side,
 edit records inside `data/store.json` (`live.*` — keep ids!), then run `build`, and round-
 trip the change to the device with `writeback`.
+
+`notes/` is the OTHER canonical source: hand-written Markdown (the user writes there in
+Obsidian — the repo is an Obsidian vault). Build reads it to enrich the graph and
+dashboard but must **never create, modify, or delete anything under `notes/`**. Its
+content is the user's writing — treat it with the same care as journal entries
+(private; never publish without asking).
 
 **4. Ingest is one-way-per-export and ordered.**
 
@@ -84,11 +90,18 @@ tools/openloops.html    input layer — the capture tool (open in any browser, w
 inbox/                  drop JSON exports here, then run ingest (files are moved on ingest)
 data/store.json         CANONICAL store: _meta + live (current state) + archive (what disappeared)
 data/exports/           every raw export ever ingested, timestamped (audit trail)
-views/                  generated Markdown — browsable on GitHub, greppable, linked
+notes/                  CANONICAL hand-written notes (Obsidian) — build reads, NEVER writes
+.obsidian/              committed vault config (app/appearance/graph only; rest gitignored)
+views/                  generated Markdown — browsable on GitHub and in Obsidian, linked
 graph/graph.json        generated knowledge graph (nodes + typed edges)
 dashboard.html          generated self-contained search + graph UI (open locally, no server)
 templates/dashboard.html  the dashboard source template (edit this, not dashboard.html)
 ```
+
+The repo doubles as an **Obsidian vault** (desktop): generated views use relative
+Markdown links (they render on GitHub *and* light up Obsidian's graph), people and goals
+get one page each under `views/people/` and `views/goals/`, and notes connect to
+everything via `#tags` and `[[wikilinks]]`.
 
 ## Knowledge graph conventions
 
@@ -102,6 +115,10 @@ templates/dashboard.html  the dashboard source template (edit this, not dashboar
   back to their pipeline entry / manifestation / event with `celebrates` edges.
 - Archived records stay in the graph flagged `archived: true` — closed history is part of
   the knowledge, never dropped.
+- Hand-written notes (`notes/*.md`) are full graph citizens: `#tags` become topics,
+  `[[wikilinks]]` resolve to people (by name), goals (by yearly text), and other notes
+  (by filename); plain-text mentions of known people also link. `node os.mjs doctor`
+  warns about wikilinks that resolve to nothing.
 
 ## Answering questions over the data
 
